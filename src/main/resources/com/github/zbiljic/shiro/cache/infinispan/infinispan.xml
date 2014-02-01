@@ -1,0 +1,121 @@
+<!--
+  ~ The MIT License (MIT)
+  ~
+  ~ Copyright (c) 2014 Nemanja Zbiljić
+  ~
+  ~ Permission is hereby granted, free of charge, to any person obtaining a copy
+  ~ of this software and associated documentation files (the "Software"), to deal
+  ~ in the Software without restriction, including without limitation the rights
+  ~ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  ~ copies of the Software, and to permit persons to whom the Software is
+  ~ furnished to do so, subject to the following conditions:
+  ~
+  ~ The above copyright notice and this permission notice shall be included in all
+  ~ copies or substantial portions of the Software.
+  ~
+  ~ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  ~ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  ~ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  ~ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  ~ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  ~ SOFTWARE.
+-->
+<infinispan
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="urn:infinispan:config:6.0 http://www.infinispan.org/schemas/infinispan-config-6.0.xsd"
+        xmlns="urn:infinispan:config:6.0">
+
+    <global>
+        <globalJmxStatistics enabled="true"/>
+
+        <transport clusterName="shiroCluster">
+            <properties>
+                <property name="configurationFile" value="jgroups-tcp.xml"/>
+            </properties>
+        </transport>
+    </global>
+
+    <default>
+        <jmxStatistics enabled="true"/>
+
+        <clustering mode="distribution">
+            <sync/>
+            <stateTransfer
+                    fetchInMemoryState="true"
+                    awaitInitialTransfer="false"
+                    timeout="240000"/>
+            <hash
+                    numOwners="2"
+                    numSegments="60"/>
+        </clustering>
+
+        <!--
+            Eviction strategy. Available options are 'UNORDERED', 'LRU', 'LIRS' and 'NONE' (to disable eviction).
+        -->
+        <eviction
+                strategy="LIRS"
+                maxEntries="10000"/>
+
+        <!--
+            Maximum lifespan of a cache entry, after which the entry is expired cluster-wide, in milliseconds.
+            -1 means the entries never expire.
+
+            1 hour	3600000
+            1 day	86400000
+            1 week	604800000
+            1 month (30.44 days) 	2629743000
+            1 year (365.24 days) 	 31556926000
+        -->
+        <expiration
+                wakeUpInterval="1000"
+                lifespan="120000"
+                maxIdle="120000"/>
+    </default>
+
+    <namedCache name="shiro-activeSessionCache">
+        <eviction
+                strategy="LIRS"
+                maxEntries="10000"/>
+        <expiration
+                lifespan="-1"
+                maxIdle="-1"/>
+        <persistence
+                passivation="false">
+
+            <!-- Set the path to the directory where cache .dat files are created.
+
+                 If the path is a Java System Property it is replaced by
+                 its value in the running VM. The following properties are translated:
+
+                    user.home - User's home directory
+                    user.dir - User's current working directory
+                    java.io.tmpdir - Default temp file path
+            -->
+            <singleFile
+                    shared="false"
+                    purgeOnStartup="false"
+                    preload="false"
+                    fetchPersistentState="true"
+                    location="${java.io.tmpdir}/shiro-infinispan-cache/session/singleFileStore/data/">
+            </singleFile>
+        </persistence>
+    </namedCache>
+
+    <namedCache name="org.apache.shiro.realm.text.PropertiesRealm-0-accounts">
+        <eviction
+                strategy="LIRS"
+                maxEntries="1000"/>
+        <persistence
+                passivation="true">
+            <singleFile
+                    shared="false"
+                    purgeOnStartup="false"
+                    preload="false"
+                    fetchPersistentState="true"
+                    location="${java.io.tmpdir}/shiro-infinispan-cache/realm/singleFileStore/data/">
+            </singleFile>
+        </persistence>
+    </namedCache>
+
+</infinispan>
