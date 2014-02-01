@@ -4,8 +4,7 @@ shiro-infinispan
 Apache Shiro Infinispan cache support
 
 
-About
-=====
+## About ##
 
 Shiro's default configuration native SessionManagers use in-memory-only Session storage. This is unsuitable for most production applications.
 
@@ -14,8 +13,7 @@ Shiro provides EHCache support for session management.
 This project is drop-in replacement that uses [Infinispan](http://infinispan.org/) data grid cache.
 
 
-How to use it?
-==============
+## How to use it? ##
 
 Configuring Infinispan cache for all of Shiro's caching needs in `shiro.ini`
 
@@ -33,7 +31,6 @@ cacheManager = com.github.zbiljic.shiro.cache.infinispan.InfinispanCacheManager
 securityManager.cacheManager = $cacheManager
 ...
 ```
-
 
 ### Infinispan configuration ###
 
@@ -57,8 +54,7 @@ securityManager.cacheManager = $cacheManager
 ```
 
 
-If you found any bugs
-=====================
+## If you found any bugs ##
 
 Please open an issue
 
@@ -66,4 +62,4 @@ Please open an issue
 License
 -------
 
-This software is licensed under the [Apache License Version 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+This code is licensed under the [MIT License](http://opensource.org/licenses/MIT).
