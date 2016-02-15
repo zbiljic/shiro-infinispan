@@ -22,12 +22,8 @@
   ~ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
   ~ SOFTWARE.
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <prerequisites>
-        <maven>3.0.0</maven>
-    </prerequisites>
 
     <groupId>com.github.zbiljic</groupId>
     <artifactId>shiro-infinispan</artifactId>
@@ -39,6 +35,10 @@
         An Infinispan cache Shiro support
     </description>
     <url>https://github.com/zbiljic/shiro-infinispan</url>
+
+    <prerequisites>
+        <maven>3.0.0</maven>
+    </prerequisites>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -55,18 +55,14 @@
         <developer>
             <id>zbiljic</id>
             <name>Nemanja Zbiljic</name>
-            <email>nemanjaz@telekom.rs</email>
             <timezone>+1</timezone>
-            <roles>
-                <role>Owner</role>
-            </roles>
         </developer>
     </developers>
 
     <licenses>
         <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <name>MIT License</name>
+            <url>http://www.opensource.org/licenses/mit-license.php</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
