@@ -1,12 +1,3 @@
-# Data dir #
-############
-data
-tmp
-
-
-
-
-
 # Compiled source #
 ###################
 *.com
@@ -50,12 +41,16 @@ Thumbs.db
 .gradle
 .m2
 
-# Build output directies
-target/
-build/
-test-output/
+# Build output directories #
+############################
+/target
+*/target
+/build
+*/build
+*/bin
 
-# IntelliJ specific files/directories
+# IntelliJ specific files/directories #
+#######################################
 out
 .idea
 *.ipr
@@ -63,12 +58,14 @@ out
 *.iml
 atlassian-ide-plugin.xml
 
-# Eclipse specific files/directories
+# Eclipse specific files/directories #
+######################################
 .classpath
 .project
 .settings
 .metadata
 bin/
 
-# NetBeans specific files/directories
+# NetBeans specific files/directories #
+#######################################
 .nbattrs
