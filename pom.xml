@@ -42,12 +42,9 @@
     </description>
     <url>https://github.com/zbiljic/shiro-infinispan</url>
 
-    <prerequisites>
-        <maven>3.0.0</maven>
-    </prerequisites>
-
     <properties>
         <project.build.targetJdk>1.7</project.build.targetJdk>
+        <basepom.maven.version>3.1.1</basepom.maven.version>
 
         <shiro.version>1.2.4</shiro.version>
         <infinispan.version>6.0.1.Final</infinispan.version>
