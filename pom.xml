@@ -65,6 +65,13 @@
         </developer>
     </developers>
 
+    <scm>
+        <connection>scm:git:git@github.com:zbiljic/shiro-infinispan.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/zbiljic/shiro-infinispan.git</developerConnection>
+        <url>https://github.com/zbiljic/shiro-infinispan</url>
+        <tag>HEAD</tag>
+    </scm>
+
     <licenses>
         <license>
             <name>MIT License</name>
