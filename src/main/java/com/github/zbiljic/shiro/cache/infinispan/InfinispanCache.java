@@ -36,7 +36,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Shiro {@link org.apache.shiro.cache.Cache} implementation that wraps an {@link org.infinispan.Cache} instance.
+ * Shiro {@link org.apache.shiro.cache.Cache} implementation that wraps an {@link
+ * org.infinispan.Cache} instance.
  *
  * @author Nemanja Zbiljic
  */
@@ -116,7 +117,7 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
 
     /**
      * Removes the value which matches the key.
-     * <p/>
+     *
      * If no key matches, nothing is removed and no Exception is thrown.
      *
      * @param key the key of the element to remove
