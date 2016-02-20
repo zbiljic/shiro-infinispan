@@ -47,10 +47,10 @@
         <basepom.maven.version>3.1.1</basepom.maven.version>
 
         <shiro.version>1.2.4</shiro.version>
+        <slf4j.version>1.7.16</slf4j.version>
         <infinispan.version>6.0.1.Final</infinispan.version>
 
         <!--  Test dependencies  -->
-        <slf4j.version>1.7.16</slf4j.version>
         <junit.version>4.12</junit.version>
     </properties>
 
