@@ -31,6 +31,8 @@ import org.apache.shiro.config.ConfigurationException;
 import org.apache.shiro.io.ResourceUtils;
 import org.apache.shiro.util.Destroyable;
 import org.apache.shiro.util.Initializable;
+import org.infinispan.commons.api.BasicCache;
+import org.infinispan.commons.api.BasicCacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
@@ -66,7 +68,13 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     private static final Logger log = LoggerFactory.getLogger(InfinispanCacheManager.class);
 
     /**
-     * The Infinispan cache manager used by this implementation to create caches.
+     * The Infinispan cache container used to obtain a {@link org.infinispan.commons.api.BasicCache}.
+     */
+    protected BasicCacheContainer cacheContainer;
+
+    /**
+     * The Infinispan cache manager used by this implementation to create caches if no {@code
+     * cacheContainer} is specified.
      */
     protected EmbeddedCacheManager manager;
 
@@ -85,6 +93,25 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
      * Default no argument constructor
      */
     public InfinispanCacheManager() {
+    }
+
+    /**
+     * Returns the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer} instance.
+     *
+     * @return the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer} instance.
+     */
+    public BasicCacheContainer getCacheContainer() {
+        return cacheContainer;
+    }
+
+    /**
+     * Sets the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer} instance.
+     *
+     * @param cacheContainer the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer}
+     *                       instance.
+     */
+    public void setCacheContainer(BasicCacheContainer cacheContainer) {
+        this.cacheContainer = cacheContainer;
     }
 
     /**
@@ -167,25 +194,33 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
         }
 
         try {
-            this.ensureCacheManager();
-            org.infinispan.Cache<K, V> cache;
+            this.ensureCacheContainer();
+            BasicCache<K, V> cache;
 
-            if (!this.manager.getCacheNames().contains(name)) {
-                if (log.isInfoEnabled()) {
-                    log.info("Cache with name '{}' does not yet exist.  Creating now.", name);
-                }
+            if (this.cacheManagerImplicitlyCreated) {
+                if (!this.manager.getCacheNames().contains(name)) {
+                    if (log.isInfoEnabled()) {
+                        log.info("Cache with name '{}' does not yet exist.  Creating now.", name);
+                    }
 
-                cache = this.manager.getCache(name, true);
+                    cache = this.manager.getCache(name, true);
 
-                if (log.isInfoEnabled()) {
-                    log.info("Added InfinispanCache named [" + name + "]");
+                    if (log.isInfoEnabled()) {
+                        log.info("Added InfinispanCache named [" + name + "]");
+                    }
+                } else {
+                    this.manager.startCaches(name);
+                    cache = this.manager.getCache(name, false);
+
+                    if (log.isInfoEnabled()) {
+                        log.info("Using existing InfinispanCache named [" + cache.getName() + "]");
+                    }
                 }
             } else {
-                this.manager.startCaches(name);
-                cache = this.manager.getCache(name, false);
+                cache = this.cacheContainer.getCache(name);
 
                 if (log.isInfoEnabled()) {
-                    log.info("Using existing InfinispanCache named [" + cache.getName() + "]");
+                    log.info("Using InfinispanCache named [" + cache.getName() + "]");
                 }
             }
 
@@ -198,7 +233,8 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     /**
      * Initializes this instance.
      *
-     * If a {@link #setCacheManager CacheManager} has been explicitly set (e.g. via Dependency
+     * If a {@link #setCacheContainer(BasicCacheContainer)} or a {@link
+     * #setCacheManager(EmbeddedCacheManager)} has been explicitly set (e.g. via Dependency
      * Injection or programatically) prior to calling this method, this method does nothing.
      *
      * However, if no {@code CacheManager} has been set, the default Infinispan will be initialized,
@@ -215,17 +251,32 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
      */
     @Override
     public final void init() throws ShiroException {
-        ensureCacheManager();
+        ensureCacheContainer();
     }
 
-    private EmbeddedCacheManager ensureCacheManager() {
+    private synchronized void ensureCacheContainer() {
+        try {
+            if (this.cacheContainer == null) {
+                ensureCacheManager();
+            }
+        } catch (Exception e) {
+            throw new CacheException(e);
+        }
+    }
+
+    private synchronized EmbeddedCacheManager ensureCacheManager() {
         try {
             if (this.manager == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("cacheManager property not set.  Constructing DefaultCacheManager instance... ");
                 }
 
-                this.manager = new DefaultCacheManager(getCacheManagerConfigFileInputStream());
+                try {
+                    Class.forName("org.infinispan.manager.DefaultCacheManager");
+                    this.manager = new DefaultCacheManager(getCacheManagerConfigFileInputStream());
+                } catch (ClassNotFoundException e) {
+                    throw new CacheException(e);
+                }
 
                 if (log.isTraceEnabled()) {
                     log.trace("instantiated Infinispan DefaultCacheManager instance.");

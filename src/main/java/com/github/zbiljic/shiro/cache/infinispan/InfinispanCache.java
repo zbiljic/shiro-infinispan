@@ -26,6 +26,7 @@ package com.github.zbiljic.shiro.cache.infinispan;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.cache.CacheException;
 import org.apache.shiro.util.CollectionUtils;
+import org.infinispan.commons.api.BasicCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +38,7 @@ import java.util.Set;
 
 /**
  * Shiro {@link org.apache.shiro.cache.Cache} implementation that wraps an {@link
- * org.infinispan.Cache} instance.
+ * org.infinispan.commons.api.BasicCache} instance.
  *
  * @author Nemanja Zbiljic
  */
@@ -51,14 +52,14 @@ public class InfinispanCache<K, V> implements Cache<K, V> {
     /**
      * The wrapped Infinispan instance.
      */
-    private org.infinispan.Cache cache;
+    private BasicCache cache;
 
     /**
      * Constructs a new InfinispanCache instance with the given cache.
      *
      * @param cache - delegate InfinispanCache instance this Shiro cache instance will wrap.
      */
-    public InfinispanCache(org.infinispan.Cache cache) {
+    public InfinispanCache(BasicCache cache) {
         if (cache == null) {
             throw new IllegalArgumentException("Cache argument cannot be null.");
         }
