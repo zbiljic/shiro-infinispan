@@ -257,7 +257,7 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     private synchronized void ensureCacheContainer() {
         try {
             if (this.cacheContainer == null) {
-                ensureCacheManager();
+                this.cacheContainer = ensureCacheManager();
             }
         } catch (Exception e) {
             throw new CacheException(e);
