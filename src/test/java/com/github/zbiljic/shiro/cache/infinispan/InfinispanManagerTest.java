@@ -26,6 +26,8 @@ package com.github.zbiljic.shiro.cache.infinispan;
 import org.apache.shiro.cache.Cache;
 import org.apache.shiro.util.LifecycleUtils;
 
+import org.infinispan.commons.api.BasicCacheContainer;
+import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 
 import org.junit.After;
@@ -81,4 +83,31 @@ public class InfinispanManagerTest {
         assertEquals(value, "world");
     }
 
+    @Test
+    public void testProvideCustomCacheManager() throws Exception {
+        // create custom cache manager
+        EmbeddedCacheManager customCacheManager = new DefaultCacheManager(cacheManager.getCacheManagerConfigFileInputStream());
+        assertNotNull(customCacheManager);
+
+        BasicCacheContainer infinispanCacheContainer = cacheManager.getCacheContainer();
+        assertNull(infinispanCacheContainer);
+
+        cacheManager.setCacheContainer(customCacheManager);
+
+        //now assert that an internal EmbeddedCacheManager has been created:
+        infinispanCacheContainer = cacheManager.getCacheContainer();
+        assertNotNull(infinispanCacheContainer);
+
+        // Acquire the cache:
+        Cache<String, String> cache = cacheManager.getCache("test");
+
+        assertNotNull(cache);
+        cache.put("hello", "world");
+        String value = cache.get("hello");
+        assertNotNull(value);
+        assertEquals(value, "world");
+
+        // Don't forget to stop the custom cache manager
+        customCacheManager.stop();
+    }
 }

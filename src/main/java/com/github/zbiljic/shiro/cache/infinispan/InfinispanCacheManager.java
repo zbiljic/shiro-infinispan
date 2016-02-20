@@ -31,6 +31,8 @@ import org.apache.shiro.config.ConfigurationException;
 import org.apache.shiro.io.ResourceUtils;
 import org.apache.shiro.util.Destroyable;
 import org.apache.shiro.util.Initializable;
+import org.infinispan.commons.api.BasicCache;
+import org.infinispan.commons.api.BasicCacheContainer;
 import org.infinispan.manager.DefaultCacheManager;
 import org.infinispan.manager.EmbeddedCacheManager;
 import org.slf4j.Logger;
@@ -40,19 +42,23 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Shiro {@code CacheManager} implementation utilizing the Infinispan data grid for all cache functionality.
- * <p/>
- * This class can {@link #setCacheManager(org.infinispan.manager.EmbeddedCacheManager) accept} a manually configured
- * {@link org.infinispan.manager.DefaultCacheManager DefaultCacheManager} instance,
- * or an {@code infinispan.xml} path location can be specified instead and one will be constructed. If neither are
- * specified, Shiro's failsafe <code><a href="./infinispan.xml">infinispan.xml</a>} file will be used by default.
- * <p/>
+ * Shiro {@code CacheManager} implementation utilizing the Infinispan data grid for all cache
+ * functionality.
+ *
+ * This class can {@link #setCacheManager(org.infinispan.manager.EmbeddedCacheManager) accept} a
+ * manually configured {@link org.infinispan.manager.DefaultCacheManager DefaultCacheManager}
+ * instance, or an {@code infinispan.xml} path location can be specified instead and one will be
+ * constructed. If neither are specified, Shiro's failsafe <code><a href="./infinispan.xml">infinispan.xml</a>}
+ * file will be used by default.
+ *
  * This implementation requires Infinispan 6.0.0 and above.
- * <p/>
- * Please see the <a href="http://infinispan.org/" target="_top">Infinispan - Open Source Data Grids website</a> for their documentation.
+ *
+ * Please see the <a href="http://infinispan.org/" target="_top">Infinispan - Open Source Data Grids
+ * website</a> for their documentation.
  *
  * @author Nemanja Zbiljic
- * @see <a href="http://www.jboss.org/infinispan/" target="_top">The Infinispan - Open Source Data Grids website</a>
+ * @see <a href="http://www.jboss.org/infinispan/" target="_top">The Infinispan - Open Source Data
+ * Grids website</a>
  */
 public class InfinispanCacheManager implements CacheManager, Initializable, Destroyable {
 
@@ -62,13 +68,19 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     private static final Logger log = LoggerFactory.getLogger(InfinispanCacheManager.class);
 
     /**
-     * The Infinispan cache manager used by this implementation to create caches.
+     * The Infinispan cache container used to obtain a {@link org.infinispan.commons.api.BasicCache}.
+     */
+    protected BasicCacheContainer cacheContainer;
+
+    /**
+     * The Infinispan cache manager used by this implementation to create caches if no {@code
+     * cacheContainer} is specified.
      */
     protected EmbeddedCacheManager manager;
 
     /**
-     * Indicates if the EmbeddedCacheManager instance was implicitly/automatically created by this instance, indicating that
-     * it should be automatically cleaned up as well on shutdown.
+     * Indicates if the EmbeddedCacheManager instance was implicitly/automatically created by this
+     * instance, indicating that it should be automatically cleaned up as well on shutdown.
      */
     private boolean cacheManagerImplicitlyCreated = false;
 
@@ -84,43 +96,63 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     }
 
     /**
-     * Returns the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager EmbeddedCacheManager} instance.
+     * Returns the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer} instance.
      *
-     * @return the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager EmbeddedCacheManager} instance.
+     * @return the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer} instance.
+     */
+    public BasicCacheContainer getCacheContainer() {
+        return cacheContainer;
+    }
+
+    /**
+     * Sets the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer} instance.
+     *
+     * @param cacheContainer the Infinispan {@link org.infinispan.commons.api.BasicCacheContainer}
+     *                       instance.
+     */
+    public void setCacheContainer(BasicCacheContainer cacheContainer) {
+        this.cacheContainer = cacheContainer;
+    }
+
+    /**
+     * Returns the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager} instance.
+     *
+     * @return the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager} instance.
      */
     public EmbeddedCacheManager getCacheManager() {
         return this.manager;
     }
 
     /**
-     * Sets the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager EmbeddedCacheManager} instance.
+     * Sets the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager} instance.
      *
-     * @param manager the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager EmbeddedCacheManager} instance.
+     * @param manager the wrapped Infinispan {@link org.infinispan.manager.EmbeddedCacheManager}
+     *                instance.
      */
     public void setCacheManager(EmbeddedCacheManager manager) {
         this.manager = manager;
     }
 
     /**
-     * Returns the resource location of the config file used to initialize a new
-     * Infinispan EmbeddedCacheManager instance.  The string can be any resource path supported by the
-     * {@link org.apache.shiro.io.ResourceUtils#getInputStreamForPath(String)} call.
-     * <p/>
+     * Returns the resource location of the config file used to initialize a new Infinispan
+     * EmbeddedCacheManager instance.  The string can be any resource path supported by the {@link
+     * org.apache.shiro.io.ResourceUtils#getInputStreamForPath(String)} call.
+     *
      * This property is ignored if the EmbeddedCacheManager instance is injected directly - that is,
      * it is only used to lazily create a EmbeddedCacheManager if one is not already provided.
      *
-     * @return the resource location of the config file used to initialize the wrapped
-     *         Infinispan EmbeddedCacheManager instance.
+     * @return the resource location of the config file used to initialize the wrapped Infinispan
+     * EmbeddedCacheManager instance.
      */
     public String getCacheManagerConfigFile() {
         return this.cacheManagerConfigFile;
     }
 
     /**
-     * Sets the resource location of the config file used to initialize the wrapped
-     * Infinispan EmbeddedCacheManager instance.  The string can be any resource path supported by the
-     * {@link org.apache.shiro.io.ResourceUtils#getInputStreamForPath(String)} call.
-     * <p/>
+     * Sets the resource location of the config file used to initialize the wrapped Infinispan
+     * EmbeddedCacheManager instance.  The string can be any resource path supported by the {@link
+     * org.apache.shiro.io.ResourceUtils#getInputStreamForPath(String)} call.
+     *
      * This property is ignored if the EmbeddedCacheManager instance is injected directly - that is,
      * it is only used to lazily create a EmbeddedCacheManager if one is not already provided.
      *
@@ -132,8 +164,8 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     }
 
     /**
-     * Acquires the InputStream for the Infinispan configuration file using
-     * {@link ResourceUtils#getInputStreamForPath(String) ResourceUtils.getInputStreamForPath} with the
+     * Acquires the InputStream for the Infinispan configuration file using {@link
+     * ResourceUtils#getInputStreamForPath(String) ResourceUtils.getInputStreamForPath} with the
      * path returned from {@link #getCacheManagerConfigFile() getCacheManagerConfigFile()}.
      *
      * @return the InputStream for the Infinispan configuration file.
@@ -149,7 +181,8 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
     }
 
     /**
-     * Loads an existing InfinispanCache from the cache manager, or starts a new cache if one is not found.
+     * Loads an existing InfinispanCache from the cache manager, or starts a new cache if one is not
+     * found.
      *
      * @param name the name of the cache to load/create.
      */
@@ -161,25 +194,33 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
         }
 
         try {
-            this.ensureCacheManager();
-            org.infinispan.Cache<K, V> cache;
+            this.ensureCacheContainer();
+            BasicCache<K, V> cache;
 
-            if (!this.manager.getCacheNames().contains(name)) {
-                if (log.isInfoEnabled()) {
-                    log.info("Cache with name '{}' does not yet exist.  Creating now.", name);
-                }
+            if (this.cacheManagerImplicitlyCreated) {
+                if (!this.manager.getCacheNames().contains(name)) {
+                    if (log.isInfoEnabled()) {
+                        log.info("Cache with name '{}' does not yet exist.  Creating now.", name);
+                    }
 
-                cache = this.manager.getCache(name, true);
+                    cache = this.manager.getCache(name, true);
 
-                if (log.isInfoEnabled()) {
-                    log.info("Added InfinispanCache named [" + name + "]");
+                    if (log.isInfoEnabled()) {
+                        log.info("Added InfinispanCache named [" + name + "]");
+                    }
+                } else {
+                    this.manager.startCaches(name);
+                    cache = this.manager.getCache(name, false);
+
+                    if (log.isInfoEnabled()) {
+                        log.info("Using existing InfinispanCache named [" + cache.getName() + "]");
+                    }
                 }
             } else {
-                this.manager.startCaches(name);
-                cache = this.manager.getCache(name, false);
+                cache = this.cacheContainer.getCache(name);
 
                 if (log.isInfoEnabled()) {
-                    log.info("Using existing InfinispanCache named [" + cache.getName() + "]");
+                    log.info("Using InfinispanCache named [" + cache.getName() + "]");
                 }
             }
 
@@ -191,36 +232,51 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
 
     /**
      * Initializes this instance.
-     * <p/>
-     * If a {@link #setCacheManager CacheManager} has been
-     * explicitly set (e.g. via Dependency Injection or programatically) prior to calling this
-     * method, this method does nothing.
-     * <p/>
-     * However, if no {@code CacheManager} has been set, the default Infinispan will be initialized, where
-     * Infinispan will look for an {@code infinispan.xml} file at the root of the classpath.  If one is not found,
-     * Infinispan will use its own failsafe configuration file.
-     * <p/>
-     * Because Shiro cannot use the failsafe defaults (fail-safe expunges cached objects after 2 minutes,
-     * something not desirable for Shiro sessions), this class manages an internal default configuration for
-     * this case.
      *
-     * @throws org.apache.shiro.cache.CacheException
-     *          if there are any CacheExceptions thrown by Infinispan.
+     * If a {@link #setCacheContainer(BasicCacheContainer)} or a {@link
+     * #setCacheManager(EmbeddedCacheManager)} has been explicitly set (e.g. via Dependency
+     * Injection or programatically) prior to calling this method, this method does nothing.
+     *
+     * However, if no {@code CacheManager} has been set, the default Infinispan will be initialized,
+     * where Infinispan will look for an {@code infinispan.xml} file at the root of the classpath.
+     * If one is not found, Infinispan will use its own failsafe configuration file.
+     *
+     * Because Shiro cannot use the failsafe defaults (fail-safe expunges cached objects after 2
+     * minutes, something not desirable for Shiro sessions), this class manages an internal default
+     * configuration for this case.
+     *
+     * @throws org.apache.shiro.cache.CacheException if there are any CacheExceptions thrown by
+     *                                               Infinispan.
      * @see org.infinispan.manager.DefaultCacheManager#createCache(String)
      */
     @Override
     public final void init() throws ShiroException {
-        ensureCacheManager();
+        ensureCacheContainer();
     }
 
-    private EmbeddedCacheManager ensureCacheManager() {
+    private synchronized void ensureCacheContainer() {
+        try {
+            if (this.cacheContainer == null) {
+                ensureCacheManager();
+            }
+        } catch (Exception e) {
+            throw new CacheException(e);
+        }
+    }
+
+    private synchronized EmbeddedCacheManager ensureCacheManager() {
         try {
             if (this.manager == null) {
                 if (log.isDebugEnabled()) {
                     log.debug("cacheManager property not set.  Constructing DefaultCacheManager instance... ");
                 }
 
-                this.manager = new DefaultCacheManager(getCacheManagerConfigFileInputStream());
+                try {
+                    Class.forName("org.infinispan.manager.DefaultCacheManager");
+                    this.manager = new DefaultCacheManager(getCacheManagerConfigFileInputStream());
+                } catch (ClassNotFoundException e) {
+                    throw new CacheException(e);
+                }
 
                 if (log.isTraceEnabled()) {
                     log.trace("instantiated Infinispan DefaultCacheManager instance.");
@@ -240,10 +296,10 @@ public class InfinispanCacheManager implements CacheManager, Initializable, Dest
 
     /**
      * Shuts-down the wrapped Infinispan EmbeddedCacheManager <b>only if implicitly created</b>.
-     * <p/>
-     * If another component injected
-     * a non-null EmbeddedCacheManager into this instance before calling {@link #init() init}, this instance expects
-     * that same component to also destroy the EmbeddedCacheManager instance, and it will not attempt to do so.
+     *
+     * If another component injected a non-null EmbeddedCacheManager into this instance before
+     * calling {@link #init() init}, this instance expects that same component to also destroy the
+     * EmbeddedCacheManager instance, and it will not attempt to do so.
      */
     @Override
     public void destroy() {
